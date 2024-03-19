@@ -45,16 +45,103 @@ const EditorNoSSR = ({ type }: any) => {
     tools: TOOLS,
   });
 
+  function editorToHTML(editorData: any) {
+    let html = "";
+
+    editorData.blocks.forEach((block: any) => {
+      switch (block.type) {
+        case "paragraph":
+          html += `<p>${block.data.text}</p>`;
+          break;
+        case "header":
+          html += `<h${block.data.level}>${block.data.text}</h${block.data.level}>`;
+          break;
+        case "image":
+          html += `<img src="${block.data.url}" alt="${block.data.caption}">`;
+          break;
+        case "list":
+          html += `<${block.data.style === "ordered" ? "ol" : "ul"}>`;
+          block.data.items.forEach((item) => {
+            html += `<li>${item}</li>`;
+          });
+          html += `</${block.data.style === "ordered" ? "ol" : "ul"}>`;
+          break;
+        case "quote":
+          html += `<blockquote>${block.data.text}</blockquote>`;
+          break;
+        case "code":
+          html += `<pre><code>${block.data.code}</code></pre>`;
+          break;
+        case "delimiter":
+          html += "<hr>";
+          break;
+        case "raw":
+          html += block.data.html;
+          break;
+        // Add cases for other block types as needed
+        default:
+          // Unsupported block types can be skipped or handled differently
+          break;
+      }
+    });
+
+    return html;
+  }
+
+  const endpoint = "https://8-e28c8ff2ae-nlt6w4.api.zesty.io/v1/web/views";
+  const APP_SID = "e8813bc5b6382bf295fae21cd756828a464c2ac3";
+
   const saveFunc = () => {
     editor
       .save()
-      .then((outputData) => {
-        console.log("data:", outputData.blocks);
+      .then(async (outputData) => {
+        await fetch(endpoint, {
+          mode: "cors",
+          method: "POST",
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${APP_SID}`,
+          },
+          body: JSON.stringify({
+            code: editorToHTML(outputData),
+            fileName: "Test View 0017",
+            type: "ajax-json",
+          }),
+        });
       })
       .catch((error) => {
         console.log(error);
       });
   };
+
+  // const saveFunc = async () => {
+  //   let headersList = {
+  //     Accept: "*/*",
+  //     "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+  //     Authorization: "Bearer e8813bc5b6382bf295fae21cd756828a464c2ac3",
+  //     "Content-Type": "application/json",
+  //   };
+
+  //   let bodyContent = JSON.stringify({
+  //     code: "<p>test</p>",
+  //     fileName: "Test View 51",
+  //     type: "templateset",
+  //   });
+
+  //   let response = await fetch(
+  //     "https://8-e28c8ff2ae-nlt6w4.api.zesty.io/v1/web/views",
+  //     {
+  //       method: "POST",
+  //       body: bodyContent,
+  //       headers: headersList,
+  //     }
+  //   );
+
+  //   let data = await response.text();
+  //   console.log(data);
+  // };
 
   return (
     <>
