@@ -15,8 +15,11 @@ import CheckList from "@editorjs/checklist";
 import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import SimpleImage from "@editorjs/simple-image";
+import React, { useRef, useEffect } from "react";
 
 const EditorNoSSR = ({ type }: any) => {
+  const editorRef = useRef(null);
+  let editor: any;
   const TOOLS = {
     embed: Embed,
     table: Table,
@@ -25,7 +28,15 @@ const EditorNoSSR = ({ type }: any) => {
     warning: Warning,
     code: Code,
     linkTool: LinkTool,
-    image: Image,
+    image: {
+      class: Image,
+      config: {
+        endpoints: {
+          byFile: "http://localhost:3000/editor", // Your backend file uploader endpoint
+          byUrl: "http://localhost:3000/fetchUrl", // Your endpoint that provides uploading by Url
+        },
+      },
+    },
     raw: Raw,
     header: Header,
     quote: Quote,
@@ -37,13 +48,19 @@ const EditorNoSSR = ({ type }: any) => {
     simpleImage: SimpleImage,
   };
 
-  const editor = new EditorJs({
-    /**
-     * Id of Element that should contain the Editor
-     */
-    holder: "editorjs",
-    tools: TOOLS,
-  });
+  useEffect(() => {
+    editor = new EditorJs({
+      /**
+       * Id of Element that should contain the Editor
+       */
+      holder: "editorjs",
+      tools: TOOLS,
+    });
+
+    return () => {
+      editor.destroy();
+    };
+  }, []);
 
   // function editorToHTML(editorData: any) {
   //   let html = "";
@@ -133,7 +150,7 @@ const EditorNoSSR = ({ type }: any) => {
 
   const endpoint =
     "https://8-e28c8ff2ae-nlt6w4.api.zesty.io/v1/content/models/6-ea81cee6c6-2kbq03/items/7-8892d4e6c6-p4k2rw";
-  const APP_SID = "7dfb8e81bd0cb71e90c7f4c47430b94e3f723bef";
+  const APP_SID = "f7dd1bb6ebd5837bd44ea280eed5cc5fc1885562";
 
   const saveFunc = () => {
     editor
@@ -150,7 +167,7 @@ const EditorNoSSR = ({ type }: any) => {
           },
           body: JSON.stringify({
             data: {
-              test: editorToHTML(outputData),
+              test: JSON.stringify(outputData),
             },
           }),
         });
@@ -189,7 +206,7 @@ const EditorNoSSR = ({ type }: any) => {
 
   return (
     <>
-      <div id="editorjs"></div>
+      <div ref={editorRef} id="editorjs"></div>
       <button onClick={saveFunc}>Save</button>
     </>
   );
