@@ -19,8 +19,7 @@ import React, { useEffect, useState } from "react";
 
 const EditorNoSSR = () => {
   let editor: any;
-  const [saveData, setSaveData] = useState({});
-  const [isFetching, setIsFetching] = useState(false);
+  const [saveData, setSaveData] = useState(null);
   const endpoint = process.env.NEXT_PUBLIC_ENDPOINT as string;
   const APP_SID = process.env.NEXT_PUBLIC_APP_SID;
   const TOOLS = {
@@ -56,17 +55,16 @@ const EditorNoSSR = () => {
        */
       holder: "editorjs",
       tools: TOOLS,
-      data: saveData,
+      data: saveData !== null && saveData,
     });
 
     return () => {
       editor.destroy();
     };
-  }, []);
+  }, [saveData]);
 
   useEffect(() => {
     async function fetchData() {
-      setIsFetching(true);
       try {
         const response = await fetch(endpoint, {
           method: "GET",
@@ -89,11 +87,9 @@ const EditorNoSSR = () => {
         // Handle the data from the response
         const temp = data?.data?.data?.test;
         setSaveData(JSON.parse(temp));
-        setIsFetching(false);
       } catch (error) {
         // Handle any errors that occurred during the fetch
         console.error("There was a problem with your fetch operation:", error);
-        setIsFetching(false);
       }
     }
     fetchData();
