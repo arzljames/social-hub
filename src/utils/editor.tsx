@@ -15,10 +15,14 @@ import CheckList from "@editorjs/checklist";
 import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import SimpleImage from "@editorjs/simple-image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 const EditorNoSSR = () => {
   let editor: any;
+  const [saveData, setSaveData] = useState({});
+  const [isFetching, setIsFetching] = useState(false);
+  const endpoint = process.env.NEXT_PUBLIC_ENDPOINT as string;
+  const APP_SID = process.env.NEXT_PUBLIC_APP_SID;
   const TOOLS = {
     embed: Embed,
     table: Table,
@@ -52,6 +56,7 @@ const EditorNoSSR = () => {
        */
       holder: "editorjs",
       tools: TOOLS,
+      data: saveData,
     });
 
     return () => {
@@ -59,11 +64,41 @@ const EditorNoSSR = () => {
     };
   }, []);
 
+  useEffect(() => {
+    async function fetchData() {
+      setIsFetching(true);
+      try {
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${APP_SID}`,
+          },
+        });
 
+        // Check if the request was successful (status code 200)
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
 
+        // Parse the JSON from the response
+        const data = await response.json();
 
-  const endpoint = process.env.NEXT_PUBLIC_ENDPOINT;
-  const APP_SID = process.env.NEXT_PUBLIC_APP_SIDE;
+        // Handle the data from the response
+        const temp = data?.data?.data?.test;
+        setSaveData(JSON.parse(temp));
+        setIsFetching(false);
+      } catch (error) {
+        // Handle any errors that occurred during the fetch
+        console.error("There was a problem with your fetch operation:", error);
+        setIsFetching(false);
+      }
+    }
+    fetchData();
+    console.log(saveData);
+  }, []);
 
   const saveFunc = () => {
     editor
@@ -89,7 +124,6 @@ const EditorNoSSR = () => {
         console.log(error);
       });
   };
-
 
   return (
     <>
